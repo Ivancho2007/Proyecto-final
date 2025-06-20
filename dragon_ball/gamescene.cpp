@@ -1,6 +1,6 @@
 #include "gamescene.h"
 #include <QKeyEvent>
-#include <QGraphicsPixmapItem>
+#include <QGraphicsRectItem>
 #include <QDebug>
 
 GameScene::GameScene(QObject *parent)
@@ -16,46 +16,45 @@ GameScene::GameScene(QObject *parent)
 
 void GameScene::setupLevel()
 {
-    // Fondo
+    // Fondo (se mantiene igual)
     QPixmap fondo("C:/Users/IVAN/Downloads/fondo1.png");
     if (fondo.isNull()) {
         fondo = QPixmap(800, 600);
         fondo.fill(Qt::blue);
     }
-
     backgroundItem = new QGraphicsPixmapItem(fondo);
     backgroundItem->setZValue(-1);
     addItem(backgroundItem);
 
-    // Goku
+    // Goku - posición inicial (abajo a la izquierda)
     goku = new Goku();
-    goku->setPos(100, 405);
+    goku->setPos(50, 500 - goku->pixmap().height()); // X: 50, Y: ajustado a la base
     addItem(goku);
 
-    // Enemy (Piccolo)
+    // Piccolo - posición inicial (derecha del escenario)
     enemy = new Enemy();
-    enemy->setPos(1200, 560); // posición en el nivel
+    enemy->setPos(650, 500 - enemy->pixmap().height()); // X: 650, Y: misma base que Goku
     addItem(enemy);
 
-    // Plataformas
-    QPixmap plataformaPixmap("C:/Users/IVAN/Downloads/PLATAFORMA.png");
-    plataformaPixmap = plataformaPixmap.scaled(80, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-    QList<QPoint> positions = {
-        QPoint(600, 500),
-        QPoint(800, 450),
-        QPoint(1000, 400)
+    // Plataformas - posiciones estratégicas
+    QList<QRectF> platformRects = {
+        // Formato: QRectF(x, y, ancho, alto)
+        QRectF(200, 290, 120, 15),  // Plataforma baja izquierda
+        QRectF(450, 380, 100, 15),  // Plataforma central más alta
+        QRectF(650, 310, 100, 15)   // Plataforma derecha más alta
     };
 
-
-    for (const QPoint &pos : positions) {
-        QGraphicsPixmapItem *platform = new QGraphicsPixmapItem(plataformaPixmap);
-        platform->setPos(pos);
+    for (const QRectF &rect : platformRects) {
+        QGraphicsRectItem *platform = new QGraphicsRectItem(rect);
+        platform->setBrush(QColor(0, 200, 0, 200)); // Verde semitransparente
+        platform->setPen(QPen(Qt::black, 1));
+        platform->setZValue(1); // Encima del fondo
         addItem(platform);
         platforms.append(platform);
     }
 
-    resizeBackground();
+    // Ajustar el nivel del suelo para Goku
+    goku->groundLevel = 520; // Coincide con la base de la ventana
 }
 
 void GameScene::resizeBackground()
@@ -70,9 +69,35 @@ void GameScene::resizeBackground()
     }
 }
 
+
 void GameScene::update()
 {
     goku->advance(1);
+
+    // Verificar colisiones con plataformas
+    QRectF gokuRect = goku->boundingRect().translated(goku->pos());
+    bool onPlatform = false;
+
+    for (QGraphicsRectItem* platform : platforms) {
+        QRectF platformRect = platform->rect().translated(platform->pos());
+
+        if (gokuRect.intersects(platformRect) &&
+            goku->velocityY > 0 &&
+            gokuRect.bottom() <= platformRect.top() + 5) {
+            goku->setPos(goku->x(), platformRect.top() - gokuRect.height());
+            goku->velocityY = 0;
+            goku->isJumping = false;
+            onPlatform = true;
+            break;
+        }
+    }
+
+    // Si no está en plataforma, verificar suelo base
+    if (!onPlatform && goku->y() + goku->pixmap().height() >= goku->groundLevel) {
+        goku->setPos(goku->x(), goku->groundLevel - goku->pixmap().height());
+        goku->velocityY = 0;
+        goku->isJumping = false;
+    }
 }
 
 void GameScene::keyPressEvent(QKeyEvent *event)

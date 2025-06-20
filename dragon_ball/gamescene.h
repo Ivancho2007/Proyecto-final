@@ -2,7 +2,7 @@
 #define GAMESCENE_H
 
 #include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
+#include <QGraphicsRectItem> // Cambiado de QGraphicsPixmapItem
 #include <QTimer>
 #include "goku.h"
 #include "enemy.h"
@@ -14,6 +14,8 @@ class GameScene : public QGraphicsScene
 public:
     explicit GameScene(QObject *parent = nullptr);
     void resizeBackground();
+
+    const QList<QGraphicsRectItem*>& getPlatforms() const { return platforms; } // Cambiado a RectItem
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -28,10 +30,9 @@ private:
     Goku *goku;
     Enemy *enemy;
     QGraphicsPixmapItem *backgroundItem;
-    QList<QGraphicsPixmapItem *> platforms;
+    QList<QGraphicsRectItem*> platforms; // Cambiado a RectItem
     QTimer *gameTimer;
 };
 
 #endif // GAMESCENE_H
-
 

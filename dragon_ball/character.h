@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QGraphicsPixmapItem>
+class GameScene;
 
 class Character : public QObject, public QGraphicsPixmapItem
 {
@@ -32,6 +33,7 @@ public:
     virtual void stopMoving();
     virtual void basicAttack();
     virtual void advance(int phase) override;
+    virtual bool checkPlatformCollision(qreal x, qreal y, const QList<QGraphicsRectItem*>& platforms);
 };
 
 #endif // CHARACTER_H

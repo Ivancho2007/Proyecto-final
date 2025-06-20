@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QResizeEvent>
-#include <QGraphicsWidget>
 #include <QStackedWidget>
 #include <QGraphicsView>
 
@@ -14,6 +13,8 @@ MainWindow::MainWindow(QWidget *parent)
     , gameView(nullptr)
     , gameScene(nullptr)
 {
+    setFixedSize(800, 600);
+    setWindowFlags(windowFlags() & ~Qt::WindowMaximizeButtonHint);
     setCentralWidget(stackedWidget);
     setupMenu();
 }
@@ -23,7 +24,7 @@ void MainWindow::setupMenu()
     QWidget *menuWidget = new QWidget();
     QVBoxLayout *layout = new QVBoxLayout(menuWidget);
 
-    QLabel *title = new QLabel("DragonBall Game - Nivel 1");
+    QLabel *title = new QLabel("DragonBall Game");
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet("font-size: 36px; color: #FFD700;");
 
@@ -50,33 +51,17 @@ void MainWindow::startGame()
     gameView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     gameView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     gameView->setFrameStyle(QFrame::NoFrame);
-    gameView->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    gameView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    gameView->setFixedSize(800, 600);
 
     stackedWidget->addWidget(gameView);
     stackedWidget->setCurrentWidget(gameView);
     gameView->setFocus();
 
-    // Ajustar tamaño inicial
-    QSize size = this->size();
-    gameView->setFixedSize(size);
-    gameScene->setSceneRect(0, 0, size.width(), size.height());
+    gameScene->setSceneRect(0, 0, 800, 600);
     gameScene->resizeBackground();
-}
-
-void MainWindow::resizeEvent(QResizeEvent *event)
-{
-    QMainWindow::resizeEvent(event);
-
-    if (gameScene && gameView) {
-        QSize size = event->size();
-        gameView->setFixedSize(size);
-        gameScene->setSceneRect(0, 0, size.width(), size.height());
-        gameScene->resizeBackground();
-    }
 }
 
 MainWindow::~MainWindow()
 {
-    // Limpieza automática por herencia de padres
+    // Limpieza automática
 }

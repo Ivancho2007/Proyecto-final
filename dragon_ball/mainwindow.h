@@ -15,8 +15,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
-protected:
-    void resizeEvent(QResizeEvent *event) override;
+
 
 private slots:
     void startGame();

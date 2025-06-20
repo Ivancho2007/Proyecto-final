@@ -2,9 +2,9 @@
 
 Goku::Goku(QGraphicsItem *parent) : Character(parent)
 {
-    setPixmap(QPixmap("C:/Users/IVAN/Downloads/goku.png").scaled(320, 320, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    groundLevel = 405; // Asegura que coincida con el fondo
-    setY(groundLevel); // Coloca a Goku sobre el "suelo"
+    setPixmap(QPixmap("C:/Users/IVAN/Downloads/goku.png").scaled(120, 120, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    groundLevel = 500;
+    setY(groundLevel - pixmap().height());
 }
 
 void Goku::jump()

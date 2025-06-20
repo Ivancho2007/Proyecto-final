@@ -15,10 +15,18 @@ public:
     bool isRunning = false;
     bool facingRight = true;
 
+    // Movimiento horizontal
     qreal velocityX = 0;
     qreal moveSpeed = 5;
 
-    virtual void jump();  // aún sin salto funcional
+    // Movimiento vertical (salto parabólico)
+    bool isJumping = false;
+    qreal velocityY = 0;
+    qreal gravity = 0.5;
+    qreal jumpSpeed = 10;
+    qreal groundLevel = 405;  // Puedes ajustar este valor
+
+    virtual void jump();
     virtual void moveLeft();
     virtual void moveRight();
     virtual void stopMoving();
@@ -27,4 +35,3 @@ public:
 };
 
 #endif // CHARACTER_H
-

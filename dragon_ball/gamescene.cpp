@@ -42,10 +42,11 @@ void GameScene::setupLevel()
     plataformaPixmap = plataformaPixmap.scaled(80, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
     QList<QPoint> positions = {
-        QPoint(400, 500),
-        QPoint(600, 450),
-        QPoint(700, 400)
+        QPoint(600, 500),
+        QPoint(800, 450),
+        QPoint(1000, 400)
     };
+
 
     for (const QPoint &pos : positions) {
         QGraphicsPixmapItem *platform = new QGraphicsPixmapItem(plataformaPixmap);

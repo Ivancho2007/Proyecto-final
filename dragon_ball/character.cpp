@@ -2,14 +2,18 @@
 #include <QDebug>
 #include <QGraphicsScene>
 
-Character::Character(QGraphicsItem *parent) : QObject(), QGraphicsPixmapItem(parent)
+Character::Character(QGraphicsItem *parent)
+    : QObject(), QGraphicsPixmapItem(parent)
 {
     setPixmap(QPixmap(":/characters/goku.png").scaled(50, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 void Character::jump()
 {
-    // Por ahora, no hace nada
+    if (!isJumping) {
+        velocityY = -14;  // ← Aumenta el impulso del salto
+        isJumping = true;
+    }
 }
 
 void Character::moveLeft()
@@ -41,13 +45,22 @@ void Character::advance(int phase)
 {
     if (!phase) return;
 
+    // Movimiento horizontal
     qreal newX = x() + velocityX;
-
-    // Evita que salga de la escena
     if (newX < 0) newX = 0;
     if (newX > scene()->width() - pixmap().width()) {
         newX = scene()->width() - pixmap().width();
     }
 
-    setX(newX);
+    // Movimiento vertical (salto parabólico)
+    velocityY += gravity;
+    qreal newY = y() + velocityY;
+
+    if (newY >= groundLevel) {
+        newY = groundLevel;
+        velocityY = 0;
+        isJumping = false;
+    }
+
+    setPos(newX, newY);
 }

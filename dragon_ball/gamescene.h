@@ -5,7 +5,7 @@
 #include <QGraphicsPixmapItem>
 #include <QTimer>
 #include "goku.h"
-#include "enemy.h"  // <-- AÑADIDO
+#include "enemy.h"
 
 class GameScene : public QGraphicsScene
 {
@@ -26,11 +26,12 @@ private:
     void setupLevel();
 
     Goku *goku;
-    Enemy *enemy;  // <-- AÑADIDO
+    Enemy *enemy;
     QGraphicsPixmapItem *backgroundItem;
     QList<QGraphicsPixmapItem *> platforms;
     QTimer *gameTimer;
 };
 
 #endif // GAMESCENE_H
+
 

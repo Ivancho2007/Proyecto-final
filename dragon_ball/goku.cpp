@@ -31,3 +31,4 @@ void Goku::advance(int phase)
 {
     Character::advance(phase);
 }
+

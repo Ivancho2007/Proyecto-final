@@ -55,6 +55,8 @@ void GameScene::setupLevel()
 
     // Ajustar el nivel del suelo para Goku
     goku->groundLevel = 520; // Coincide con la base de la ventana
+
+    setupHealthBars();
 }
 
 void GameScene::resizeBackground()
@@ -107,6 +109,14 @@ void GameScene::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D: goku->moveRight(); break;
     case Qt::Key_Space:
     case Qt::Key_W: goku->jump(); break;
+    case Qt::Key_F:
+        goku->decreaseHealth(10);
+        updateHealthBars();
+        break;
+    case Qt::Key_G:
+        enemy->decreaseHealth(10);
+        updateHealthBars();
+        break;
     }
 }
 
@@ -115,4 +125,58 @@ void GameScene::keyReleaseEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_A || event->key() == Qt::Key_D) {
         goku->stopMoving();
     }
+}
+
+
+void GameScene::setupHealthBars()
+{
+    // Configuración común
+    int barWidth = 200;
+    int barHeight = 20;
+    int margin = 20;
+
+    // Fondo barra de Goku (izquierda)
+    gokuHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    gokuHealthBackground->setPos(margin, margin);
+    gokuHealthBackground->setBrush(Qt::gray);
+    gokuHealthBackground->setPen(QPen(Qt::black, 2));
+    gokuHealthBackground->setZValue(100);
+    addItem(gokuHealthBackground);
+
+    // Barra de vida de Goku
+    gokuHealthBar = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    gokuHealthBar->setPos(margin, margin);
+    gokuHealthBar->setBrush(Qt::green);
+    gokuHealthBar->setPen(Qt::NoPen);
+    gokuHealthBar->setZValue(101);
+    addItem(gokuHealthBar);
+
+    // Fondo barra de Piccolo (derecha)
+    piccoloHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    piccoloHealthBackground->setPos(width() - barWidth - margin, margin);
+    piccoloHealthBackground->setBrush(Qt::gray);
+    piccoloHealthBackground->setPen(QPen(Qt::black, 2));
+    piccoloHealthBackground->setZValue(100);
+    addItem(piccoloHealthBackground);
+
+    // Barra de vida de Piccolo
+    piccoloHealthBar = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    piccoloHealthBar->setPos(width() - barWidth - margin, margin);
+    piccoloHealthBar->setBrush(Qt::red);
+    piccoloHealthBar->setPen(Qt::NoPen);
+    piccoloHealthBar->setZValue(101);
+    addItem(piccoloHealthBar);
+
+    updateHealthBars();
+}
+
+void GameScene::updateHealthBars()
+{
+    // Actualizar barra de Goku
+    qreal gokuHealthPercent = static_cast<qreal>(goku->getHealth()) / goku->getMaxHealth();
+    gokuHealthBar->setRect(0, 0, 200 * gokuHealthPercent, 20);
+
+    // Actualizar barra de Piccolo
+    qreal piccoloHealthPercent = static_cast<qreal>(enemy->getHealth()) / enemy->getMaxHealth();
+    piccoloHealthBar->setRect(0, 0, 200 * piccoloHealthPercent, 20);
 }

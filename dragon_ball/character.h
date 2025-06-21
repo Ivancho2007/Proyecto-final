@@ -16,6 +16,14 @@ public:
     bool isRunning = false;
     bool facingRight = true;
 
+    //barras de vida
+    int maxHealth = 100;
+    int currentHealth = 100;
+
+    void decreaseHealth(int amount);
+    int getHealth() const { return currentHealth; }
+    int getMaxHealth() const { return maxHealth; }
+
     // Movimiento horizontal
     qreal velocityX = 0;
     qreal moveSpeed = 5;

@@ -109,3 +109,8 @@ void Character::advance(int phase)
 
     setPos(newX, newY);
 }
+void Character::decreaseHealth(int amount)
+{
+    currentHealth = qMax(0, currentHealth - amount);
+    qDebug() << "Health decreased to:" << currentHealth;
+}

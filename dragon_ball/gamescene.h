@@ -15,7 +15,7 @@ public:
     explicit GameScene(QObject *parent = nullptr);
     void resizeBackground();
 
-    const QList<QGraphicsRectItem*>& getPlatforms() const { return platforms; } // Cambiado a RectItem
+    const QList<QGraphicsRectItem*>& getPlatforms() const { return platforms; }
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -26,11 +26,18 @@ private slots:
 
 private:
     void setupLevel();
+    // Barras de vida
+    QGraphicsRectItem* gokuHealthBar;
+    QGraphicsRectItem* gokuHealthBackground;
+    QGraphicsRectItem* piccoloHealthBar;
+    QGraphicsRectItem* piccoloHealthBackground;
 
+    void setupHealthBars();
+    void updateHealthBars();
     Goku *goku;
     Enemy *enemy;
     QGraphicsPixmapItem *backgroundItem;
-    QList<QGraphicsRectItem*> platforms; // Cambiado a RectItem
+    QList<QGraphicsRectItem*> platforms;
     QTimer *gameTimer;
 };
 

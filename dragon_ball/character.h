@@ -42,6 +42,9 @@ public:
     virtual void basicAttack();
     virtual void advance(int phase) override;
     virtual bool checkPlatformCollision(qreal x, qreal y, const QList<QGraphicsRectItem*>& platforms);
+
+signals:
+    void healthChanged();
 };
 
 #endif // CHARACTER_H

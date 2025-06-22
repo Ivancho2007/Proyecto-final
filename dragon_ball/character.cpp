@@ -112,5 +112,8 @@ void Character::advance(int phase)
 void Character::decreaseHealth(int amount)
 {
     currentHealth = qMax(0, currentHealth - amount);
+    emit healthChanged(); // Emitir señal cuando la salud cambie
     qDebug() << "Health decreased to:" << currentHealth;
 }
+
+

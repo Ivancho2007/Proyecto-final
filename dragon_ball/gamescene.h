@@ -6,6 +6,7 @@
 #include <QTimer>
 #include "goku.h"
 #include "enemy.h"
+#include "StoneAttack.h"
 
 class GameScene : public QGraphicsScene
 {
@@ -20,6 +21,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+
 
 private slots:
     void update();

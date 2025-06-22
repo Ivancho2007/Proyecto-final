@@ -57,6 +57,8 @@ void GameScene::setupLevel()
     goku->groundLevel = 520; // Coincide con la base de la ventana
 
     setupHealthBars();
+    connect(goku, &Character::healthChanged, this, &GameScene::updateHealthBars);
+    connect(enemy, &Character::healthChanged, this, &GameScene::updateHealthBars);
 }
 
 void GameScene::resizeBackground()
@@ -110,12 +112,14 @@ void GameScene::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Space:
     case Qt::Key_W: goku->jump(); break;
     case Qt::Key_F:
-        goku->decreaseHealth(10);
-        updateHealthBars();
-        break;
-    case Qt::Key_G:
-        enemy->decreaseHealth(10);
-        updateHealthBars();
+        // Crear nuevo ataque de piedra
+        if (goku) {
+            StoneAttack *stone = new StoneAttack();
+            stone->setPos(goku->x() + goku->pixmap().width(),
+                          goku->y() + goku->pixmap().height()/2);
+            stone->setZValue(50);
+            addItem(stone);
+        }
         break;
     }
 }

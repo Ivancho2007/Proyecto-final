@@ -6,7 +6,7 @@
 #include <QTimer>
 #include "goku.h"
 #include "enemy.h"
-#include "StoneAttack.h"
+#include "atack.h"
 
 class GameScene : public QGraphicsScene
 {
@@ -41,7 +41,7 @@ private:
     QGraphicsPixmapItem *backgroundItem;
     QList<QGraphicsRectItem*> platforms;
     QTimer *gameTimer;
+    void checkPlatformCollisions(Character* character);
 };
 
 #endif // GAMESCENE_H
-

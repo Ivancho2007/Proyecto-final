@@ -72,7 +72,7 @@ void Character::advance(int phase)
 
     // Movimiento vertical
     velocityY += 0.4;
-    qreal newY = y() + velocityY;
+    float newY = y() + velocityY;
 
     // Sistema mejorado de detección de plataformas
     bool onPlatform = false;

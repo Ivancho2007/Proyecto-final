@@ -77,6 +77,7 @@ void GameScene::resizeBackground()
 void GameScene::update()
 {
     goku->advance(1);
+    enemy->advance(1);
 
     // Verificar colisiones con plataformas
     QRectF gokuRect = goku->boundingRect().translated(goku->pos());
@@ -94,6 +95,8 @@ void GameScene::update()
             onPlatform = true;
             break;
         }
+    checkPlatformCollisions(goku);
+    checkPlatformCollisions(enemy);
     }
 
     // Si no está en plataforma, verificar suelo base
@@ -104,6 +107,33 @@ void GameScene::update()
     }
 }
 
+
+void GameScene::checkPlatformCollisions(Character* character)
+{
+    QRectF charRect = character->boundingRect().translated(character->pos());
+    bool onPlatform = false;
+
+    for (QGraphicsRectItem* platform : platforms) {
+        QRectF platformRect = platform->rect().translated(platform->pos());
+
+        if (charRect.intersects(platformRect) &&
+            character->velocityY > 0 &&
+            charRect.bottom() <= platformRect.top() + 5) {
+
+            character->setPos(character->x(), platformRect.top() - charRect.height());
+            character->velocityY = 0;
+            character->isJumping = false;
+            onPlatform = true;
+            break;
+        }
+    }
+
+    if (!onPlatform && character->y() + character->pixmap().height() >= character->groundLevel) {
+        character->setPos(character->x(), character->groundLevel - character->pixmap().height());
+        character->velocityY = 0;
+        character->isJumping = false;
+    }
+}
 void GameScene::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
@@ -112,11 +142,14 @@ void GameScene::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Space:
     case Qt::Key_W: goku->jump(); break;
     case Qt::Key_F:
-        // Crear nuevo ataque de piedra
         if (goku) {
-            StoneAttack *stone = new StoneAttack();
+            StoneAttack *stone = new StoneAttack(
+                StoneAttack::GOKU_ATTACK,
+                true, // Siempre hacia la derecha
+                nullptr
+                );
             stone->setPos(goku->x() + goku->pixmap().width(),
-                          goku->y() + goku->pixmap().height()/2);
+                          goku->y() + goku->pixmap().height()/3);
             stone->setZValue(50);
             addItem(stone);
         }

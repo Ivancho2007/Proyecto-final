@@ -43,8 +43,14 @@ public:
     virtual void advance(int phase) override;
     virtual bool checkPlatformCollision(qreal x, qreal y, const QList<QGraphicsRectItem*>& platforms);
 
+    void setHealth(int value) {
+        currentHealth = qBound(0, value, maxHealth);
+        emit healthChanged();
+    }
+
 signals:
     void healthChanged();
 };
 
 #endif // CHARACTER_H
+

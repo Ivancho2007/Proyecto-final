@@ -2,21 +2,28 @@
 #include <QKeyEvent>
 #include <QGraphicsRectItem>
 #include <QDebug>
+#include "salud.h"
 
 GameScene::GameScene(QObject *parent)
-    : QGraphicsScene(parent)
+    : QGraphicsScene(parent),
+    gameState(PLAYING),
+    goku(nullptr),
+    enemy(nullptr),
+    backgroundItem(nullptr),
+    gameTimer(nullptr),
+    gameText(nullptr),
+    gameOverlay(nullptr)
 {
-    setSceneRect(0, 0, 800, 600); // Tamaño inicial
+    setSceneRect(0, 0, 800, 600);
     setupLevel();
 
     gameTimer = new QTimer(this);
     connect(gameTimer, &QTimer::timeout, this, &GameScene::update);
-    gameTimer->start(16); // ~60 FPS
+    gameTimer->start(16);
 }
 
 void GameScene::setupLevel()
 {
-    // Fondo (se mantiene igual)
     QPixmap fondo("C:/Users/IVAN/Downloads/fondo1.png");
     if (fondo.isNull()) {
         fondo = QPixmap(800, 600);
@@ -26,39 +33,35 @@ void GameScene::setupLevel()
     backgroundItem->setZValue(-1);
     addItem(backgroundItem);
 
-    // Goku - posición inicial (abajo a la izquierda)
     goku = new Goku();
-    goku->setPos(50, 500 - goku->pixmap().height()); // X: 50, Y: ajustado a la base
+    goku->setPos(50, 500 - goku->pixmap().height());
     addItem(goku);
 
-    // Piccolo - posición inicial (derecha del escenario)
     enemy = new Enemy();
-    enemy->setPos(650, 500 - enemy->pixmap().height()); // X: 650, Y: misma base que Goku
+    enemy->setPos(650, 500 - enemy->pixmap().height());
     addItem(enemy);
 
-    // Plataformas - posiciones estratégicas
     QList<QRectF> platformRects = {
-        // Formato: QRectF(x, y, ancho, alto)
-        QRectF(200, 290, 120, 15),  // Plataforma baja izquierda
-        QRectF(450, 380, 100, 15),  // Plataforma central más alta
-        QRectF(650, 310, 100, 15)   // Plataforma derecha más alta
+        QRectF(200, 290, 120, 15),
+        QRectF(450, 380, 100, 15),
+        QRectF(650, 310, 100, 15)
     };
 
     for (const QRectF &rect : platformRects) {
         QGraphicsRectItem *platform = new QGraphicsRectItem(rect);
-        platform->setBrush(QColor(0, 200, 0, 200)); // Verde semitransparente
+        platform->setBrush(QColor(0, 200, 0, 200));
         platform->setPen(QPen(Qt::black, 1));
-        platform->setZValue(1); // Encima del fondo
+        platform->setZValue(1);
         addItem(platform);
         platforms.append(platform);
     }
 
-    // Ajustar el nivel del suelo para Goku
-    goku->groundLevel = 520; // Coincide con la base de la ventana
+    goku->groundLevel = 520;
 
     setupHealthBars();
     connect(goku, &Character::healthChanged, this, &GameScene::updateHealthBars);
     connect(enemy, &Character::healthChanged, this, &GameScene::updateHealthBars);
+    spawnDragonBalls();
 }
 
 void GameScene::resizeBackground()
@@ -73,13 +76,13 @@ void GameScene::resizeBackground()
     }
 }
 
-
 void GameScene::update()
 {
+    if (gameState != PLAYING) return;
+
     goku->advance(1);
     enemy->advance(1);
 
-    // Verificar colisiones con plataformas
     QRectF gokuRect = goku->boundingRect().translated(goku->pos());
     bool onPlatform = false;
 
@@ -95,47 +98,42 @@ void GameScene::update()
             onPlatform = true;
             break;
         }
-    checkPlatformCollisions(goku);
-    checkPlatformCollisions(enemy);
     }
 
-    // Si no está en plataforma, verificar suelo base
+    checkPlatformCollisions(goku);
+    checkPlatformCollisions(enemy);
+
+    QRectF gokuRectCollision = goku->boundingRect().translated(goku->pos());
+    for (DragonBall *ball : dragonBalls) {
+        if (ball && gokuRectCollision.intersects(ball->boundingRect().translated(ball->pos()))) {
+            emit ball->collected(ball->getHealthValue());
+            removeItem(ball);
+            dragonBalls.removeOne(ball);
+            delete ball;
+            break;
+        }
+    }
+
     if (!onPlatform && goku->y() + goku->pixmap().height() >= goku->groundLevel) {
         goku->setPos(goku->x(), goku->groundLevel - goku->pixmap().height());
         goku->velocityY = 0;
         goku->isJumping = false;
     }
-}
 
-
-void GameScene::checkPlatformCollisions(Character* character)
-{
-    QRectF charRect = character->boundingRect().translated(character->pos());
-    bool onPlatform = false;
-
-    for (QGraphicsRectItem* platform : platforms) {
-        QRectF platformRect = platform->rect().translated(platform->pos());
-
-        if (charRect.intersects(platformRect) &&
-            character->velocityY > 0 &&
-            charRect.bottom() <= platformRect.top() + 5) {
-
-            character->setPos(character->x(), platformRect.top() - charRect.height());
-            character->velocityY = 0;
-            character->isJumping = false;
-            onPlatform = true;
-            break;
-        }
+    if (goku->getHealth() <= 0 && gameState == PLAYING) {
+        gameState = GAME_OVER;
     }
 
-    if (!onPlatform && character->y() + character->pixmap().height() >= character->groundLevel) {
-        character->setPos(character->x(), character->groundLevel - character->pixmap().height());
-        character->velocityY = 0;
-        character->isJumping = false;
+    if (enemy->getHealth() <= 0 && gameState == PLAYING) {
+        gameState = LEVEL_COMPLETED;
+        showLevelComplete();
     }
 }
+
 void GameScene::keyPressEvent(QKeyEvent *event)
 {
+    if (gameState != PLAYING) return;
+
     switch (event->key()) {
     case Qt::Key_A: goku->moveLeft(); break;
     case Qt::Key_D: goku->moveRight(); break;
@@ -145,7 +143,7 @@ void GameScene::keyPressEvent(QKeyEvent *event)
         if (goku) {
             StoneAttack *stone = new StoneAttack(
                 StoneAttack::GOKU_ATTACK,
-                true, // Siempre hacia la derecha
+                true,
                 nullptr
                 );
             stone->setPos(goku->x() + goku->pixmap().width(),
@@ -164,15 +162,12 @@ void GameScene::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
-
 void GameScene::setupHealthBars()
 {
-    // Configuración común
     int barWidth = 200;
     int barHeight = 20;
     int margin = 20;
 
-    // Fondo barra de Goku (izquierda)
     gokuHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
     gokuHealthBackground->setPos(margin, margin);
     gokuHealthBackground->setBrush(Qt::gray);
@@ -180,7 +175,6 @@ void GameScene::setupHealthBars()
     gokuHealthBackground->setZValue(100);
     addItem(gokuHealthBackground);
 
-    // Barra de vida de Goku
     gokuHealthBar = new QGraphicsRectItem(0, 0, barWidth, barHeight);
     gokuHealthBar->setPos(margin, margin);
     gokuHealthBar->setBrush(Qt::green);
@@ -188,7 +182,6 @@ void GameScene::setupHealthBars()
     gokuHealthBar->setZValue(101);
     addItem(gokuHealthBar);
 
-    // Fondo barra de Piccolo (derecha)
     piccoloHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
     piccoloHealthBackground->setPos(width() - barWidth - margin, margin);
     piccoloHealthBackground->setBrush(Qt::gray);
@@ -196,7 +189,6 @@ void GameScene::setupHealthBars()
     piccoloHealthBackground->setZValue(100);
     addItem(piccoloHealthBackground);
 
-    // Barra de vida de Piccolo
     piccoloHealthBar = new QGraphicsRectItem(0, 0, barWidth, barHeight);
     piccoloHealthBar->setPos(width() - barWidth - margin, margin);
     piccoloHealthBar->setBrush(Qt::red);
@@ -209,11 +201,85 @@ void GameScene::setupHealthBars()
 
 void GameScene::updateHealthBars()
 {
-    // Actualizar barra de Goku
     qreal gokuHealthPercent = static_cast<qreal>(goku->getHealth()) / goku->getMaxHealth();
     gokuHealthBar->setRect(0, 0, 200 * gokuHealthPercent, 20);
 
-    // Actualizar barra de Piccolo
     qreal piccoloHealthPercent = static_cast<qreal>(enemy->getHealth()) / enemy->getMaxHealth();
     piccoloHealthBar->setRect(0, 0, 200 * piccoloHealthPercent, 20);
+}
+
+void GameScene::spawnDragonBalls()
+{
+    QList<QPointF> positions = {
+        QPointF(220, 260),
+        QPointF(470, 350),
+        QPointF(670, 280)
+    };
+
+    for (int i = 0; i < positions.size(); ++i) {
+        DragonBall::BallType type;
+        switch(i) {
+        case 0: type = DragonBall::ONE_STAR; break;
+        case 1: type = DragonBall::TWO_STARS; break;
+        case 2: type = DragonBall::THREE_STARS; break;
+        }
+
+        DragonBall *ball = new DragonBall(type);
+        ball->setPos(positions[i]);
+        addItem(ball);
+        dragonBalls.append(ball);
+        connect(ball, &DragonBall::collected, this, &GameScene::onDragonBallCollected);
+    }
+}
+
+void GameScene::onDragonBallCollected(int healthRestored)
+{
+    goku->setHealth(qMin(goku->getHealth() + healthRestored, goku->getMaxHealth()));
+    updateHealthBars();
+    qDebug() << "Salud recuperada:" << healthRestored;
+}
+
+void GameScene::checkPlatformCollisions(Character* character)
+{
+    QRectF charRect = character->boundingRect().translated(character->pos());
+    bool onPlatform = false;
+
+    for (QGraphicsRectItem* platform : platforms) {
+        QRectF platformRect = platform->rect().translated(platform->pos());
+
+        if (charRect.intersects(platformRect) &&
+            character->velocityY > 0 &&
+            charRect.bottom() <= platformRect.top() + 5) {
+            character->setPos(character->x(), platformRect.top() - charRect.height());
+            character->velocityY = 0;
+            character->isJumping = false;
+            onPlatform = true;
+            break;
+        }
+    }
+
+    if (!onPlatform && character->y() + character->pixmap().height() >= character->groundLevel) {
+        character->setPos(character->x(), character->groundLevel - character->pixmap().height());
+        character->velocityY = 0;
+        character->isJumping = false;
+    }
+}
+
+void GameScene::showLevelComplete()
+{
+    gameTimer->stop();
+    enemy->aiTimer->stop();
+    enemy->attackTimer->stop();
+
+    gameOverlay = new QGraphicsRectItem(0, 0, width(), height());
+    gameOverlay->setBrush(QColor(0, 0, 0, 150));
+    gameOverlay->setZValue(200);
+    addItem(gameOverlay);
+
+    gameText = new QGraphicsTextItem("¡Nivel 1 Completado!");
+    gameText->setDefaultTextColor(Qt::white);
+    gameText->setFont(QFont("Arial", 36, QFont::Bold));
+    gameText->setPos(width()/2 - gameText->boundingRect().width()/2, height()/2 - 100);
+    gameText->setZValue(201);
+    addItem(gameText);
 }

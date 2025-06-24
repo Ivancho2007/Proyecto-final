@@ -37,24 +37,28 @@ private:
     void setupLevel();
     void showLevelComplete();
 
-    // Barras de vida
+    void setupHealthBars();
+    void updateHealthBars();
+    void checkPlatformCollisions(Character* character);
+    void spawnDragonBalls();
+
+    // Personajes
+    Goku *goku;
+    Enemy *enemy;
+    Enemy *secondEnemy;
+
+    // Salud
     QGraphicsRectItem* gokuHealthBar;
     QGraphicsRectItem* gokuHealthBackground;
     QGraphicsRectItem* piccoloHealthBar;
     QGraphicsRectItem* piccoloHealthBackground;
 
-    void setupHealthBars();
-    void updateHealthBars();
-    Goku *goku;
-    Enemy *enemy;
+    // Otros
     QGraphicsPixmapItem *backgroundItem;
     QList<QGraphicsRectItem*> platforms;
-    QTimer *gameTimer;
-    void checkPlatformCollisions(Character* character);
-    void spawnDragonBalls();
     QList<DragonBall*> dragonBalls;
+    QTimer *gameTimer;
     GameState gameState;
-
     QGraphicsTextItem* gameText;
     QGraphicsRectItem* gameOverlay;
 };

@@ -5,18 +5,16 @@
 #include <QRandomGenerator>
 #include "gamescene.h"
 
-Enemy::Enemy(QGraphicsItem *parent) : Character(parent)
+Enemy::Enemy(const QString& spritePath, QGraphicsItem *parent)
+    : Character(parent)
 {
-    setPixmap(QPixmap("C:/Users/IVAN/Downloads/piccolo.png").scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    setPixmap(QPixmap(spritePath).scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     groundLevel = 500;
-    setY(groundLevel - pixmap().height() + 30);
-    moveSpeed = 3;
+    moveSpeed = 5;
     jumpSpeed = 12;
     gravity = 0.6;
-
     maxHealth = 100;
     currentHealth = 100;
-    moveSpeed = 5;
 
     // Inicializar timers
     aiTimer = new QTimer(this);
@@ -31,8 +29,7 @@ Enemy::Enemy(QGraphicsItem *parent) : Character(parent)
 void Enemy::advance(int phase)
 {
     if (!phase) return;
-
-    Character::advance(phase); // Usa la lógica base de movimiento
+    Character::advance(phase);
 }
 
 void Enemy::decideAction()
@@ -43,9 +40,8 @@ void Enemy::decideAction()
         return;
     }
 
-    // Buscar a Goku en la escena
     if (!target) {
-        foreach (QGraphicsItem *item, gameScene->items()) {
+        for (QGraphicsItem *item : gameScene->items()) {
             if (dynamic_cast<Goku*>(item)) {
                 target = item;
                 break;
@@ -54,22 +50,18 @@ void Enemy::decideAction()
     }
 
     if (target) {
-        // Movimiento hacia Goku
         if (x() < target->x() - 50) {
             moveRight();
-        }
-        else if (x() > target->x() + 50) {
+        } else if (x() > target->x() + 50) {
             moveLeft();
-        }
-        else {
+        } else {
             stopMoving();
-            // Posición adecuada para atacar
             if (!attackTimer->isActive()) {
                 attackTimer->start(attackCooldown);
             }
         }
 
-        // Salto aleatorio
+        // Saltar aleatoriamente
         if (QRandomGenerator::global()->bounded(100) < 10 && !isJumping) {
             jump();
         }
@@ -79,21 +71,16 @@ void Enemy::decideAction()
 void Enemy::attack()
 {
     GameScene* gameScene = qobject_cast<GameScene*>(this->scene());
-    if (!gameScene || gameScene->getGameState() != GameScene::PLAYING) {
-        return;
-    }
+    if (!gameScene || gameScene->getGameState() != GameScene::PLAYING) return;
+    if (!target || !scene()) return;
 
-    if (!target || !this->scene()) return;
-
-    bool attackRight = (x() < target->x()); // Determinar dirección
+    bool attackRight = (x() < target->x());
 
     StoneAttack *stone = new StoneAttack(
-        StoneAttack::PICCOLO_ATTACK,
-        attackRight,
-        nullptr
+        StoneAttack::PICCOLO_ATTACK,  // Usa un tipo común para ambos
+        attackRight
         );
 
-    // Posición inicial basada en dirección
     if (attackRight) {
         stone->setPos(x() + pixmap().width(), y() + pixmap().height() / 2);
     } else {
@@ -101,7 +88,7 @@ void Enemy::attack()
     }
 
     stone->setZValue(50);
-    this->scene()->addItem(stone);
+    scene()->addItem(stone);
 
     attackTimer->stop();
 }
@@ -124,4 +111,3 @@ void Enemy::stopTimers()
     aiTimer->stop();
     attackTimer->stop();
 }
-

@@ -9,6 +9,7 @@ GameScene::GameScene(QObject *parent)
     gameState(PLAYING),
     goku(nullptr),
     enemy(nullptr),
+    secondEnemy(nullptr),
     backgroundItem(nullptr),
     gameTimer(nullptr),
     gameText(nullptr),
@@ -37,9 +38,14 @@ void GameScene::setupLevel()
     goku->setPos(50, 500 - goku->pixmap().height());
     addItem(goku);
 
-    enemy = new Enemy();
+    enemy = new Enemy("C:/Users/IVAN/Downloads/piccolo.png");
     enemy->setPos(650, 500 - enemy->pixmap().height());
     addItem(enemy);
+
+    secondEnemy = new Enemy("C:/Users/IVAN/Downloads/nappa.png");
+    secondEnemy->setPos(400, 500 - secondEnemy->pixmap().height());
+    addItem(secondEnemy);
+
 
     QList<QRectF> platformRects = {
         QRectF(200, 290, 120, 15),
@@ -61,6 +67,7 @@ void GameScene::setupLevel()
     setupHealthBars();
     connect(goku, &Character::healthChanged, this, &GameScene::updateHealthBars);
     connect(enemy, &Character::healthChanged, this, &GameScene::updateHealthBars);
+    connect(secondEnemy, &Character::healthChanged, this, &GameScene::updateHealthBars);
     spawnDragonBalls();
 }
 
@@ -81,27 +88,12 @@ void GameScene::update()
     if (gameState != PLAYING) return;
 
     goku->advance(1);
-    enemy->advance(1);
-
-    QRectF gokuRect = goku->boundingRect().translated(goku->pos());
-    bool onPlatform = false;
-
-    for (QGraphicsRectItem* platform : platforms) {
-        QRectF platformRect = platform->rect().translated(platform->pos());
-
-        if (gokuRect.intersects(platformRect) &&
-            goku->velocityY > 0 &&
-            gokuRect.bottom() <= platformRect.top() + 5) {
-            goku->setPos(goku->x(), platformRect.top() - gokuRect.height());
-            goku->velocityY = 0;
-            goku->isJumping = false;
-            onPlatform = true;
-            break;
-        }
-    }
+    if (enemy) enemy->advance(1);
+    if (secondEnemy) secondEnemy->advance(1);
 
     checkPlatformCollisions(goku);
-    checkPlatformCollisions(enemy);
+    if (enemy) checkPlatformCollisions(enemy);
+    if (secondEnemy) checkPlatformCollisions(secondEnemy);
 
     QRectF gokuRectCollision = goku->boundingRect().translated(goku->pos());
     for (DragonBall *ball : dragonBalls) {
@@ -114,17 +106,13 @@ void GameScene::update()
         }
     }
 
-    if (!onPlatform && goku->y() + goku->pixmap().height() >= goku->groundLevel) {
-        goku->setPos(goku->x(), goku->groundLevel - goku->pixmap().height());
-        goku->velocityY = 0;
-        goku->isJumping = false;
-    }
-
     if (goku->getHealth() <= 0 && gameState == PLAYING) {
         gameState = GAME_OVER;
     }
 
-    if (enemy->getHealth() <= 0 && gameState == PLAYING) {
+    if (enemy && enemy->getHealth() <= 0 &&
+        secondEnemy && secondEnemy->getHealth() <= 0 &&
+        gameState == PLAYING) {
         gameState = LEVEL_COMPLETED;
         showLevelComplete();
     }
@@ -204,8 +192,19 @@ void GameScene::updateHealthBars()
     qreal gokuHealthPercent = static_cast<qreal>(goku->getHealth()) / goku->getMaxHealth();
     gokuHealthBar->setRect(0, 0, 200 * gokuHealthPercent, 20);
 
-    qreal piccoloHealthPercent = static_cast<qreal>(enemy->getHealth()) / enemy->getMaxHealth();
-    piccoloHealthBar->setRect(0, 0, 200 * piccoloHealthPercent, 20);
+    int combinedHealth = 0;
+    int maxHealth = 0;
+    if (enemy) {
+        combinedHealth += enemy->getHealth();
+        maxHealth += enemy->getMaxHealth();
+    }
+    if (secondEnemy) {
+        combinedHealth += secondEnemy->getHealth();
+        maxHealth += secondEnemy->getMaxHealth();
+    }
+
+    qreal avgHealthPercent = maxHealth > 0 ? static_cast<qreal>(combinedHealth) / maxHealth : 0;
+    piccoloHealthBar->setRect(0, 0, 200 * avgHealthPercent, 20);
 }
 
 void GameScene::spawnDragonBalls()
@@ -268,8 +267,16 @@ void GameScene::checkPlatformCollisions(Character* character)
 void GameScene::showLevelComplete()
 {
     gameTimer->stop();
-    enemy->aiTimer->stop();
-    enemy->attackTimer->stop();
+    if (enemy) {
+        enemy->stopTimers();
+        secondEnemy->stopTimers();
+
+    }
+    if (secondEnemy) {
+        enemy->stopTimers();
+        secondEnemy->stopTimers();
+
+    }
 
     gameOverlay = new QGraphicsRectItem(0, 0, width(), height());
     gameOverlay->setBrush(QColor(0, 0, 0, 150));

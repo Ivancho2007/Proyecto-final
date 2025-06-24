@@ -3,16 +3,15 @@
 
 #include "character.h"
 #include <QTimer>
+
 class GameScene;
 
 class Enemy : public Character
 {
     Q_OBJECT
 public:
-    Enemy(QGraphicsItem *parent = nullptr);
+    explicit Enemy(const QString& spritePath, QGraphicsItem *parent = nullptr);
     void advance(int phase) override;
-    QTimer *aiTimer;
-    QTimer *attackTimer;
     void stopTimers();
 
 public slots:
@@ -21,8 +20,10 @@ public slots:
     void attack();
 
 private:
-
-    QGraphicsItem* target;
-    int attackCooldown = 2000;
+    QGraphicsItem* target = nullptr;
+    QTimer *aiTimer;
+    QTimer *attackTimer;
+    int attackCooldown = 1000;
 };
+
 #endif // ENEMY_H

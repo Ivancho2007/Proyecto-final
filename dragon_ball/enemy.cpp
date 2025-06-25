@@ -77,7 +77,7 @@ void Enemy::attack()
     bool attackRight = (x() < target->x());
 
     StoneAttack *stone = new StoneAttack(
-        StoneAttack::PICCOLO_ATTACK,  // Usa un tipo común para ambos
+        StoneAttack::PICCOLO_ATTACK,
         attackRight
         );
 
@@ -111,3 +111,4 @@ void Enemy::stopTimers()
     aiTimer->stop();
     attackTimer->stop();
 }
+

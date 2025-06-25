@@ -33,8 +33,7 @@ public:
     qreal velocityY = 0;
     qreal gravity = 0.5;
     qreal jumpSpeed = 10;
-    qreal groundLevel = 405;  // Puedes ajustar este valor
-
+    qreal groundLevel = 405;
     virtual void jump();
     virtual void moveLeft();
     virtual void moveRight();

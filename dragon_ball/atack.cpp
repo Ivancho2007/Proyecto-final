@@ -68,3 +68,4 @@ StoneAttack::~StoneAttack()
     }
     qDebug() << "StoneAttack destruido correctamente";
 }
+

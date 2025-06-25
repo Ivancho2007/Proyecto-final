@@ -116,4 +116,3 @@ void Character::decreaseHealth(int amount)
     qDebug() << "Health decreased to:" << currentHealth;
 }
 
-

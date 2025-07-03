@@ -3,6 +3,9 @@
 #include "goku.h"
 #include <QGraphicsScene>
 #include <QDebug>
+#include "enemy2.h"
+#include "goku2.h"
+
 
 StoneAttack::StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *parent)
     : QObject(), QGraphicsPixmapItem(parent), owner(owner), movingRight(movingRight)
@@ -29,25 +32,30 @@ StoneAttack::StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *par
 
 void StoneAttack::move()
 {
-    // Mover en la dirección adecuada
     setPos(x() + (movingRight ? 20 : -20), y());
 
-    // Verificar colisiones solo con el objetivo adecuado
     QList<QGraphicsItem*> collidingItems = this->collidingItems();
     for (QGraphicsItem* item : collidingItems) {
-        if (owner == GOKU_ATTACK && dynamic_cast<Enemy*>(item)) {
-            dynamic_cast<Enemy*>(item)->decreaseHealth(damage);
-            removeAttack();
-            return;
+        if (owner == GOKU_ATTACK &&
+            (dynamic_cast<Enemy*>(item) || dynamic_cast<Enemy2*>(item))) {
+            Character* enemy = dynamic_cast<Character*>(item);
+            if (enemy) {
+                enemy->decreaseHealth(damage);
+                removeAttack();
+                return;
+            }
         }
-        else if (owner == PICCOLO_ATTACK && dynamic_cast<Goku*>(item)) {
-            dynamic_cast<Goku*>(item)->decreaseHealth(damage);
-            removeAttack();
-            return;
+        else if (owner == PICCOLO_ATTACK &&
+                 (dynamic_cast<Goku*>(item) || dynamic_cast<Goku2*>(item))) {
+            Character* goku = dynamic_cast<Character*>(item);
+            if (goku) {
+                goku->decreaseHealth(damage);
+                removeAttack();
+                return;
+            }
         }
     }
 
-    // Eliminar si sale de la pantalla
     if (x() > scene()->width() + 100 || x() < -100) {
         removeAttack();
     }

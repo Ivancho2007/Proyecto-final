@@ -25,6 +25,9 @@ private slots:
     void update();
     void spawnStoneRain();
 
+signals:
+    void returnToMenuRequested();
+
 private:
     void setupLevel();
     void checkPlatformCollisions();
@@ -40,6 +43,15 @@ private:
     QTimer *gameTimer;
     QTimer *rainTimer;
     bool gameOver = false;
+
+    QGraphicsRectItem *gokuHealthBar;
+    QGraphicsRectItem *gokuHealthBackground;
+    QGraphicsRectItem *enemyHealthBar;
+    QGraphicsRectItem *enemyHealthBackground;
+    void setupHealthBars();
+    void updateHealthBars();
+
+
 };
 
 #endif // GAMESCENELEVEL2_H

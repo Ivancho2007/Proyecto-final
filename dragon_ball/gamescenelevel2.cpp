@@ -4,6 +4,9 @@
 #include <QGraphicsPixmapItem>
 #include <QRandomGenerator>
 #include <QGraphicsTextItem>
+#include <QPushButton>
+#include <QGraphicsProxyWidget>
+
 
 GameSceneLevel2::GameSceneLevel2(QObject *parent)
     : QGraphicsScene(parent), gameOver(false)
@@ -36,9 +39,15 @@ void GameSceneLevel2::setupLevel()
     addItem(goku);
 
     enemy = new Enemy2("C:/Users/IVAN/Downloads/majinbuu.png");
-    enemy->groundLevel = 520;
-    enemy->setPos(600, enemy->groundLevel - enemy->pixmap().height());
+    enemy->groundLevel = 560;
+    enemy->setPos(600, enemy->groundLevel - enemy->pixmap().height()); // corregido
     addItem(enemy);
+
+    setupHealthBars();
+    connect(goku, &Character::healthChanged, this, &GameSceneLevel2::updateHealthBars);
+    connect(enemy, &Character::healthChanged, this, &GameSceneLevel2::updateHealthBars);
+
+
 }
 
 void GameSceneLevel2::spawnPlatforms()
@@ -173,10 +182,19 @@ void GameSceneLevel2::showGameOver()
     lostText->setPos(width()/2 - lostText->boundingRect().width()/2, height()/2 - 50);
     addItem(lostText);
 
+    QPushButton* backButton = new QPushButton("Volver al menú");
+    backButton->setFixedSize(200, 50);
+    backButton->setStyleSheet("font-size: 20px; background-color: #FFA500; color: white;");
+    QGraphicsProxyWidget* proxyButton = addWidget(backButton);
+    proxyButton->setPos(width()/2 - 100, height()/2 + 40);
+    proxyButton->setZValue(11);
+    connect(backButton, &QPushButton::clicked, this, &GameSceneLevel2::returnToMenuRequested);
+
     gameTimer->stop();
     rainTimer->stop();
     enemy->stopTimers();
 }
+
 
 void GameSceneLevel2::keyPressEvent(QKeyEvent *event)
 {
@@ -194,8 +212,14 @@ void GameSceneLevel2::keyPressEvent(QKeyEvent *event)
             addItem(stone);
         }
         break;
+    case Qt::Key_G:
+        if (Goku2* g2 = dynamic_cast<Goku2*>(goku)) {
+            g2->launchKamehameha();
+        }
+        break;
     }
 }
+
 
 void GameSceneLevel2::keyReleaseEvent(QKeyEvent *event)
 {
@@ -211,4 +235,56 @@ void GameSceneLevel2::spawnStoneRain()
     rainStone->setPos(x, 0);
     rainStone->setZValue(5);
     addItem(rainStone);
+}
+
+
+
+void GameSceneLevel2::setupHealthBars()
+{
+    int barWidth = 200;
+    int barHeight = 20;
+    int margin = 20;
+
+    // Barra Goku2 (izquierda)
+    gokuHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    gokuHealthBackground->setPos(margin, margin);
+    gokuHealthBackground->setBrush(Qt::gray);
+    gokuHealthBackground->setPen(QPen(Qt::black, 2));
+    gokuHealthBackground->setZValue(100);
+    addItem(gokuHealthBackground);
+
+    gokuHealthBar = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    gokuHealthBar->setPos(margin, margin);
+    gokuHealthBar->setBrush(Qt::green);
+    gokuHealthBar->setPen(Qt::NoPen);
+    gokuHealthBar->setZValue(101);
+    addItem(gokuHealthBar);
+
+    // Barra Enemy2 (derecha)
+    enemyHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    enemyHealthBackground->setPos(width() - barWidth - margin, margin);
+    enemyHealthBackground->setBrush(Qt::gray);
+    enemyHealthBackground->setPen(QPen(Qt::black, 2));
+    enemyHealthBackground->setZValue(100);
+    addItem(enemyHealthBackground);
+
+    enemyHealthBar = new QGraphicsRectItem(0, 0, barWidth, barHeight);
+    enemyHealthBar->setPos(width() - barWidth - margin, margin);
+    enemyHealthBar->setBrush(Qt::red);
+    enemyHealthBar->setPen(Qt::NoPen);
+    enemyHealthBar->setZValue(101);
+    addItem(enemyHealthBar);
+}
+
+void GameSceneLevel2::updateHealthBars()
+{
+    if (goku) {
+        qreal gokuHealthPercent = static_cast<qreal>(goku->getHealth()) / goku->getMaxHealth();
+        gokuHealthBar->setRect(0, 0, 200 * gokuHealthPercent, 20);
+    }
+
+    if (enemy) {
+        qreal enemyHealthPercent = static_cast<qreal>(enemy->getHealth()) / enemy->getMaxHealth();
+        enemyHealthBar->setRect(0, 0, 200 * enemyHealthPercent, 20);
+    }
 }

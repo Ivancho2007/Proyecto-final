@@ -1,4 +1,3 @@
-// enemy2.cpp
 #include "enemy2.h"
 #include "goku2.h"
 #include "atack.h"
@@ -10,7 +9,7 @@ Enemy2::Enemy2(const QString& spritePath, QGraphicsItem *parent)
     : Character(parent)
 {
     setPixmap(QPixmap(spritePath).scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    groundLevel = 520; // Ajustar según necesidad
+    groundLevel = 560;
     moveSpeed = 5;
     jumpSpeed = 12;
     gravity = 0.6;
@@ -21,7 +20,10 @@ Enemy2::Enemy2(const QString& spritePath, QGraphicsItem *parent)
 
     attackTimer = new QTimer(this);
     connect(attackTimer, &QTimer::timeout, this, &Enemy2::attack);
-    attackCooldown = 1000;
+
+    specialTimer = new QTimer(this);
+    connect(specialTimer, &QTimer::timeout, this, &Enemy2::specialAttack);
+    specialTimer->start(5000); // cada 5 segundos lanza súper ataque
 }
 
 void Enemy2::decideAction()
@@ -62,19 +64,34 @@ void Enemy2::attack()
 
     bool attackRight = (x() < target->x());
     StoneAttack* stone = new StoneAttack(StoneAttack::PICCOLO_ATTACK, attackRight);
+    stone->setPixmap(QPixmap("C:/Users/IVAN/Downloads/stone.png").scaled(40, 40));
 
-    if (attackRight) {
-        stone->setPos(x() + pixmap().width(), y() + pixmap().height() / 2);
-    } else {
-        stone->setPos(x() - stone->pixmap().width(), y() + pixmap().height() / 2);
-    }
-
+    stone->setPos(
+        attackRight ? x() + pixmap().width() : x() - stone->pixmap().width(),
+        y() + pixmap().height() / 2
+        );
     scene()->addItem(stone);
     attackTimer->stop();
+}
+
+void Enemy2::specialAttack()
+{
+    if (!target || !scene()) return;
+
+    bool attackRight = (x() < target->x());
+    StoneAttack* special = new StoneAttack(StoneAttack::PICCOLO_ATTACK, attackRight);
+    special->setPixmap(QPixmap("C:/Users/IVAN/Downloads/superbola.png").scaled(80, 60));
+
+    special->setPos(
+        attackRight ? x() + pixmap().width() : x() - special->pixmap().width(),
+        y() + 20
+        );
+    scene()->addItem(special);
 }
 
 void Enemy2::stopTimers()
 {
     if (aiTimer) aiTimer->stop();
     if (attackTimer) attackTimer->stop();
+    if (specialTimer) specialTimer->stop();
 }

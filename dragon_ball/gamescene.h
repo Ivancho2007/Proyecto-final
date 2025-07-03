@@ -25,6 +25,9 @@ public:
     const QList<QGraphicsRectItem*>& getPlatforms() const { return platforms; }
     GameState getGameState() const { return gameState; }
 
+signals:
+    void returnToMenuRequested();
+
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;

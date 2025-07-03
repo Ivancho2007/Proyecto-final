@@ -54,3 +54,4 @@ void DragonBall::setupAnimation()
 int DragonBall::getHealthValue() const {
     return healthValue;
 }
+

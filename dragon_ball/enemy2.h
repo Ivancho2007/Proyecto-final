@@ -1,4 +1,3 @@
-// enemy2.h
 #ifndef ENEMY2_H
 #define ENEMY2_H
 
@@ -15,11 +14,13 @@ public:
 public slots:
     void decideAction();
     void attack();
+    void specialAttack();
 
 private:
     QGraphicsItem* target = nullptr;
     QTimer *aiTimer;
     QTimer *attackTimer;
+    QTimer *specialTimer;
     int attackCooldown = 1000;
 };
 

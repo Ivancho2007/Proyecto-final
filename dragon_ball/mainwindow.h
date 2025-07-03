@@ -6,6 +6,7 @@
 class QStackedWidget;
 class QGraphicsView;
 class GameScene;
+class GameSceneLevel2;
 
 class MainWindow : public QMainWindow
 {
@@ -15,17 +16,22 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
-
+public slots:
+    void returnToMenu();
 
 private slots:
-    void startGame();
+    void startLevel1();
+    void startLevel2();
 
 private:
     QStackedWidget *stackedWidget;
     QGraphicsView *gameView;
     GameScene *gameScene;
+    GameSceneLevel2 *gameSceneLevel2;
 
     void setupMenu();
 };
 
 #endif // MAINWINDOW_H
+
+

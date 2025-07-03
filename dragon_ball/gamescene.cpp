@@ -3,6 +3,9 @@
 #include <QGraphicsRectItem>
 #include <QDebug>
 #include "salud.h"
+#include <QPushButton>
+#include <QGraphicsProxyWidget>
+
 
 GameScene::GameScene(QObject *parent)
     : QGraphicsScene(parent),
@@ -267,16 +270,8 @@ void GameScene::checkPlatformCollisions(Character* character)
 void GameScene::showLevelComplete()
 {
     gameTimer->stop();
-    if (enemy) {
-        enemy->stopTimers();
-        secondEnemy->stopTimers();
-
-    }
-    if (secondEnemy) {
-        enemy->stopTimers();
-        secondEnemy->stopTimers();
-
-    }
+    if (enemy) enemy->stopTimers();
+    if (secondEnemy) secondEnemy->stopTimers();
 
     gameOverlay = new QGraphicsRectItem(0, 0, width(), height());
     gameOverlay->setBrush(QColor(0, 0, 0, 150));
@@ -289,4 +284,13 @@ void GameScene::showLevelComplete()
     gameText->setPos(width()/2 - gameText->boundingRect().width()/2, height()/2 - 100);
     gameText->setZValue(201);
     addItem(gameText);
+
+    QPushButton* backButton = new QPushButton("Volver al menú");
+    backButton->setFixedSize(200, 50);
+    backButton->setStyleSheet("font-size: 20px; background-color: #FFA500; color: white;");
+    QGraphicsProxyWidget* proxyButton = addWidget(backButton);
+    proxyButton->setPos(width()/2 - 100, height()/2 + 20);
+    proxyButton->setZValue(202);
+    connect(backButton, &QPushButton::clicked, this, &GameScene::returnToMenuRequested);
 }
+

@@ -31,6 +31,7 @@ signals:
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
 private slots:
     void update();
@@ -56,7 +57,7 @@ private:
     QGraphicsRectItem* piccoloHealthBar;
     QGraphicsRectItem* piccoloHealthBackground;
 
-    // Otros
+
     QGraphicsPixmapItem *backgroundItem;
     QList<QGraphicsRectItem*> platforms;
     QList<DragonBall*> dragonBalls;
@@ -64,6 +65,9 @@ private:
     GameState gameState;
     QGraphicsTextItem* gameText;
     QGraphicsRectItem* gameOverlay;
+    QGraphicsRectItem* backButtonItem = nullptr;
+
+
 };
 
 #endif // GAMESCENE_H

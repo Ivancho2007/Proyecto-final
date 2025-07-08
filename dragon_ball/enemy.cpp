@@ -111,4 +111,3 @@ void Enemy::stopTimers()
     aiTimer->stop();
     attackTimer->stop();
 }
-

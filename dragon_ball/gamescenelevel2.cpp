@@ -6,10 +6,10 @@
 #include <QGraphicsTextItem>
 #include <QPushButton>
 #include <QGraphicsProxyWidget>
-
+#include <QGraphicsSceneMouseEvent>
 
 GameSceneLevel2::GameSceneLevel2(QObject *parent)
-    : QGraphicsScene(parent), gameOver(false)
+    : QGraphicsScene(parent), gameState(PLAYING)
 {
     setSceneRect(0, 0, 800, 600);
     setupLevel();
@@ -40,19 +40,16 @@ void GameSceneLevel2::setupLevel()
 
     enemy = new Enemy2("C:/Users/IVAN/Downloads/majinbuu.png");
     enemy->groundLevel = 560;
-    enemy->setPos(600, enemy->groundLevel - enemy->pixmap().height()); // corregido
+    enemy->setPos(600, enemy->groundLevel - enemy->pixmap().height());
     addItem(enemy);
 
     setupHealthBars();
     connect(goku, &Character::healthChanged, this, &GameSceneLevel2::updateHealthBars);
     connect(enemy, &Character::healthChanged, this, &GameSceneLevel2::updateHealthBars);
-
-
 }
 
 void GameSceneLevel2::spawnPlatforms()
 {
-    // Plataformas visibles
     QList<QRectF> platformRects = {
         QRectF(100, 400, 150, 20),
         QRectF(350, 300, 150, 20),
@@ -68,7 +65,6 @@ void GameSceneLevel2::spawnPlatforms()
         platforms.append(platform);
     }
 
-    // Suelo invisible
     QGraphicsRectItem *ground = new QGraphicsRectItem(0, 560, 800, 40);
     ground->setBrush(Qt::transparent);
     ground->setPen(Qt::NoPen);
@@ -88,17 +84,21 @@ void GameSceneLevel2::resizeBackground()
 
 void GameSceneLevel2::update()
 {
-    if (gameOver) return;
+    if (gameState != PLAYING) return;
 
     goku->advance(1);
     enemy->advance(1);
     checkPlatformCollisions();
 
     if (playerFell()) {
-        gameOver = true;
+        gameState = GAME_OVER;  // ¡Agregado!
         showGameOver();
+    } else if (enemy && enemy->getHealth() <= 0) {
+        gameState = GAME_OVER;  // ¡Agregado!
+        showVictory();
     }
 }
+
 
 bool GameSceneLevel2::playerFell() const
 {
@@ -107,20 +107,16 @@ bool GameSceneLevel2::playerFell() const
 
 void GameSceneLevel2::checkPlatformCollisions()
 {
-    // Para Goku
     QRectF gokuFeetRect(
-        goku->x() + 15, // Margen lateral pequeño
-        goku->y() + goku->pixmap().height() - 20, // Justo en los pies
-        goku->pixmap().width() - 25, // Ancho reducido
-        20 // Altura del área de detección
-        );
+        goku->x() + 15,
+        goku->y() + goku->pixmap().height() - 20,
+        goku->pixmap().width() - 25,
+        20);
 
     bool gokuOnPlatform = false;
 
     for (QGraphicsRectItem* platform : platforms) {
         QRectF platformRect = platform->rect().translated(platform->pos());
-
-        // Detección más precisa para cuando está cayendo
         if (gokuFeetRect.intersects(platformRect) && goku->velocityY > 0) {
             goku->setPos(goku->x(), platformRect.top() - goku->pixmap().height());
             goku->velocityY = 0;
@@ -130,7 +126,6 @@ void GameSceneLevel2::checkPlatformCollisions()
         }
     }
 
-    // Si no está en plataforma pero está en el suelo
     if (!gokuOnPlatform) {
         QRectF groundRect(0, 560, 800, 40);
         if (gokuFeetRect.intersects(groundRect) && goku->velocityY > 0) {
@@ -140,19 +135,16 @@ void GameSceneLevel2::checkPlatformCollisions()
         }
     }
 
-    // Para el enemigo (misma lógica)
     QRectF enemyFeetRect(
         enemy->x() + 5,
         enemy->y() + enemy->pixmap().height() - 10,
         enemy->pixmap().width() - 10,
-        12
-        );
+        12);
 
     bool enemyOnPlatform = false;
 
     for (QGraphicsRectItem* platform : platforms) {
         QRectF platformRect = platform->rect().translated(platform->pos());
-
         if (enemyFeetRect.intersects(platformRect) && enemy->velocityY > 0) {
             enemy->setPos(enemy->x(), platformRect.top() - enemy->pixmap().height());
             enemy->velocityY = 0;
@@ -162,7 +154,6 @@ void GameSceneLevel2::checkPlatformCollisions()
         }
     }
 
-    // Suelo para el enemigo
     if (!enemyOnPlatform) {
         QRectF groundRect(0, 560, 800, 40);
         if (enemyFeetRect.intersects(groundRect) && enemy->velocityY > 0) {
@@ -175,30 +166,84 @@ void GameSceneLevel2::checkPlatformCollisions()
 
 void GameSceneLevel2::showGameOver()
 {
+    gameState = GAME_OVER;
+    gameTimer->stop();
+    rainTimer->stop();
+    if (enemy) enemy->stopTimers();
+
+    // Fondo oscuro
+    QGraphicsRectItem* overlay = new QGraphicsRectItem(0, 0, width(), height());
+    overlay->setBrush(QColor(0, 0, 0, 150));
+    overlay->setZValue(10);
+    addItem(overlay);
+
     QGraphicsTextItem* lostText = new QGraphicsTextItem("¡Caíste!");
     lostText->setDefaultTextColor(Qt::red);
     lostText->setFont(QFont("Arial", 36, QFont::Bold));
-    lostText->setZValue(10);
-    lostText->setPos(width()/2 - lostText->boundingRect().width()/2, height()/2 - 50);
+    lostText->setZValue(11);
+    lostText->setPos(width()/2 - lostText->boundingRect().width()/2, height()/2 - 80);
     addItem(lostText);
 
-    QPushButton* backButton = new QPushButton("Volver al menú");
-    backButton->setFixedSize(200, 50);
-    backButton->setStyleSheet("font-size: 20px; background-color: #FFA500; color: white;");
-    QGraphicsProxyWidget* proxyButton = addWidget(backButton);
-    proxyButton->setPos(width()/2 - 100, height()/2 + 40);
-    proxyButton->setZValue(11);
-    connect(backButton, &QPushButton::clicked, this, &GameSceneLevel2::returnToMenuRequested);
+    backButtonItem = new QGraphicsRectItem(0, 0, 200, 50);
+    backButtonItem->setBrush(QColor("#FF4444"));
+    backButtonItem->setZValue(12);
+    backButtonItem->setPos(width()/2 - 100, height()/2 + 10);
+    addItem(backButtonItem);
 
+    QGraphicsTextItem* buttonText = new QGraphicsTextItem("Volver al menú", backButtonItem);
+    buttonText->setDefaultTextColor(Qt::white);
+    buttonText->setFont(QFont("Arial", 16, QFont::Bold));
+    buttonText->setPos(25, 10);
+    buttonText->setZValue(13);
+
+    backButtonItem->setAcceptedMouseButtons(Qt::LeftButton);
+    backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
+}
+
+
+void GameSceneLevel2::showVictory()
+{
+    gameState = LEVEL_COMPLETED;
     gameTimer->stop();
     rainTimer->stop();
-    enemy->stopTimers();
+    if (enemy) enemy->stopTimers();
+
+    // Fondo oscuro
+    QGraphicsRectItem* overlay = new QGraphicsRectItem(0, 0, width(), height());
+    overlay->setBrush(QColor(0, 0, 0, 150));
+    overlay->setZValue(10);
+    addItem(overlay);
+
+    // Texto central
+    QGraphicsTextItem* victoryText = new QGraphicsTextItem("¡Nivel 2 Completado!");
+    victoryText->setDefaultTextColor(Qt::white);
+    victoryText->setFont(QFont("Arial", 36, QFont::Bold));
+    victoryText->setZValue(11);
+    victoryText->setPos(width()/2 - victoryText->boundingRect().width()/2, height()/2 - 80);
+    addItem(victoryText);
+
+    // Botón personalizado
+    backButtonItem = new QGraphicsRectItem(0, 0, 200, 50);
+    backButtonItem->setBrush(QColor("#FFA500"));
+    backButtonItem->setZValue(12);
+    backButtonItem->setPos(width()/2 - 100, height()/2 + 10);
+    addItem(backButtonItem);
+
+    QGraphicsTextItem* buttonText = new QGraphicsTextItem("Volver al menú", backButtonItem);
+    buttonText->setDefaultTextColor(Qt::white);
+    buttonText->setFont(QFont("Arial", 16, QFont::Bold));
+    buttonText->setPos(25, 10);
+    buttonText->setZValue(13);
+
+    backButtonItem->setAcceptedMouseButtons(Qt::LeftButton);
+    backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
 }
+
 
 
 void GameSceneLevel2::keyPressEvent(QKeyEvent *event)
 {
-    if (gameOver) return;
+    if (gameState != PLAYING) return;
 
     switch (event->key()) {
     case Qt::Key_A: goku->moveLeft(); break;
@@ -220,9 +265,10 @@ void GameSceneLevel2::keyPressEvent(QKeyEvent *event)
     }
 }
 
-
 void GameSceneLevel2::keyReleaseEvent(QKeyEvent *event)
 {
+    if (gameState != PLAYING) return;
+
     if (event->key() == Qt::Key_A || event->key() == Qt::Key_D)
         goku->stopMoving();
 }
@@ -231,13 +277,11 @@ void GameSceneLevel2::spawnStoneRain()
 {
     int x = QRandomGenerator::global()->bounded(50, 750);
     StoneAttack *rainStone = new StoneAttack(StoneAttack::PICCOLO_ATTACK, false);
-    rainStone->setPixmap(QPixmap("C:/Users/IVAN/Downloads/lluvia.png").scaled(30, 30));
+    rainStone->setPixmap(QPixmap("C:/Users/IVAN/Downloads/rain.png").scaled(30, 30));
     rainStone->setPos(x, 0);
     rainStone->setZValue(5);
     addItem(rainStone);
 }
-
-
 
 void GameSceneLevel2::setupHealthBars()
 {
@@ -245,7 +289,6 @@ void GameSceneLevel2::setupHealthBars()
     int barHeight = 20;
     int margin = 20;
 
-    // Barra Goku2 (izquierda)
     gokuHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
     gokuHealthBackground->setPos(margin, margin);
     gokuHealthBackground->setBrush(Qt::gray);
@@ -260,7 +303,6 @@ void GameSceneLevel2::setupHealthBars()
     gokuHealthBar->setZValue(101);
     addItem(gokuHealthBar);
 
-    // Barra Enemy2 (derecha)
     enemyHealthBackground = new QGraphicsRectItem(0, 0, barWidth, barHeight);
     enemyHealthBackground->setPos(width() - barWidth - margin, margin);
     enemyHealthBackground->setBrush(Qt::gray);
@@ -287,4 +329,23 @@ void GameSceneLevel2::updateHealthBars()
         qreal enemyHealthPercent = static_cast<qreal>(enemy->getHealth()) / enemy->getMaxHealth();
         enemyHealthBar->setRect(0, 0, 200 * enemyHealthPercent, 20);
     }
+}
+
+void GameSceneLevel2::returnToMenu()
+{
+    emit goToMainMenu();
+}
+
+
+
+void GameSceneLevel2::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (gameState != LEVEL_COMPLETED && gameState != GAME_OVER) return;
+
+    if (backButtonItem &&
+        backButtonItem->contains(backButtonItem->mapFromScene(event->scenePos()))) {
+        emit returnToMenuRequested();
+    }
+
+    QGraphicsScene::mousePressEvent(event);
 }

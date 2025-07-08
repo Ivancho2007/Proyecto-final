@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMediaPlayer>
+#include <QAudioOutput>
+
 
 class QStackedWidget;
 class QGraphicsView;
@@ -28,6 +31,9 @@ private:
     QGraphicsView *gameView;
     GameScene *gameScene;
     GameSceneLevel2 *gameSceneLevel2;
+    QMediaPlayer *musicPlayer;
+    QAudioOutput *audioOutput;
+
 
     void setupMenu();
 };

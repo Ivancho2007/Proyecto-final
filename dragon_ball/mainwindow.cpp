@@ -7,6 +7,10 @@
 #include <QResizeEvent>
 #include <QStackedWidget>
 #include <QGraphicsView>
+#include <QMediaPlayer>
+#include <QAudioOutput>
+
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,6 +23,17 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowFlags(windowFlags() & ~Qt::WindowMaximizeButtonHint);
     setCentralWidget(stackedWidget);
     setupMenu();
+    // Música de fondo
+    musicPlayer = new QMediaPlayer(this);
+    audioOutput = new QAudioOutput(this);
+    musicPlayer->setAudioOutput(audioOutput);
+
+    // Reemplaza la ruta por tu archivo real .mp3
+    musicPlayer->setSource(QUrl::fromLocalFile("C:/Users/IVAN/Downloads/music.mp3"));
+    audioOutput->setVolume(50); // volumen del 0 al 100
+    musicPlayer->setLoops(QMediaPlayer::Infinite); // repetir sin fin
+    musicPlayer->play();
+
 }
 
 void MainWindow::setupMenu()
@@ -93,26 +108,27 @@ void MainWindow::startLevel2()
 
 void MainWindow::returnToMenu()
 {
-    if (gameScene) {
-        stackedWidget->removeWidget(gameView);
-        delete gameScene;
-        gameScene = nullptr;
-    }
-    if (gameSceneLevel2) {
-        stackedWidget->removeWidget(gameView);
-        delete gameSceneLevel2;
-        gameSceneLevel2 = nullptr;
-    }
     if (gameView) {
+        stackedWidget->removeWidget(gameView);
         delete gameView;
         gameView = nullptr;
     }
 
-    stackedWidget->setCurrentIndex(0); // menú principal
+    if (gameScene) {
+        gameScene->deleteLater();
+        gameScene = nullptr;
+    }
+
+    if (gameSceneLevel2) {
+        gameSceneLevel2->deleteLater();
+        gameSceneLevel2 = nullptr;
+    }
+
+    stackedWidget->setCurrentIndex(0);
 }
+
 
 MainWindow::~MainWindow()
 {
     // Limpieza automática
 }
-

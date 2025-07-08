@@ -5,6 +5,8 @@
 #include "salud.h"
 #include <QPushButton>
 #include <QGraphicsProxyWidget>
+#include <QGraphicsSceneMouseEvent>
+
 
 
 GameScene::GameScene(QObject *parent)
@@ -109,9 +111,51 @@ void GameScene::update()
         }
     }
 
-    if (goku->getHealth() <= 0 && gameState == PLAYING) {
+    if (goku && goku->getHealth() <= 0 && gameState == PLAYING) {
         gameState = GAME_OVER;
+
+        if (gameTimer) gameTimer->stop();
+        if (enemy) enemy->stopTimers();
+        if (secondEnemy) secondEnemy->stopTimers();
+
+        // Fondo semitransparente
+        gameOverlay = new QGraphicsRectItem(0, 0, width(), height());
+        gameOverlay->setBrush(QColor(0, 0, 0, 150));
+        gameOverlay->setZValue(200);
+        addItem(gameOverlay);
+
+        // Texto de derrota
+        gameText = new QGraphicsTextItem("¡Has perdido!");
+        gameText->setDefaultTextColor(Qt::white);
+        gameText->setFont(QFont("Arial", 36, QFont::Bold));
+        gameText->setPos(width() / 2 - gameText->boundingRect().width() / 2,
+                         height() / 2 - 100);
+        gameText->setZValue(201);
+        addItem(gameText);
+
+        // Botón gráfico personalizado
+        QGraphicsRectItem* buttonRect = new QGraphicsRectItem(0, 0, 200, 50);
+        buttonRect->setBrush(QBrush(QColor("#FF4444")));
+        buttonRect->setZValue(202);
+        buttonRect->setPos(width() / 2 - 100, height() / 2 + 20);
+        addItem(buttonRect);
+
+        QGraphicsTextItem* buttonText = new QGraphicsTextItem("Volver al menú", buttonRect);
+        buttonText->setDefaultTextColor(Qt::white);
+        buttonText->setFont(QFont("Arial", 16, QFont::Bold));
+        buttonText->setPos(25, 10);
+        buttonText->setZValue(203);
+
+        buttonRect->setFlag(QGraphicsItem::ItemIsSelectable, true);
+        buttonRect->setAcceptedMouseButtons(Qt::LeftButton);
+
+        // Guardar botón para detección posterior
+        backButtonItem = buttonRect;
     }
+
+
+
+
 
     if (enemy && enemy->getHealth() <= 0 &&
         secondEnemy && secondEnemy->getHealth() <= 0 &&
@@ -269,28 +313,55 @@ void GameScene::checkPlatformCollisions(Character* character)
 
 void GameScene::showLevelComplete()
 {
-    gameTimer->stop();
-    if (enemy) enemy->stopTimers();
-    if (secondEnemy) secondEnemy->stopTimers();
+
+    if (gameTimer)       gameTimer->stop();
+    if (enemy)           enemy->stopTimers();
+    if (secondEnemy)     secondEnemy->stopTimers();
+
 
     gameOverlay = new QGraphicsRectItem(0, 0, width(), height());
     gameOverlay->setBrush(QColor(0, 0, 0, 150));
     gameOverlay->setZValue(200);
     addItem(gameOverlay);
 
+
     gameText = new QGraphicsTextItem("¡Nivel 1 Completado!");
     gameText->setDefaultTextColor(Qt::white);
     gameText->setFont(QFont("Arial", 36, QFont::Bold));
-    gameText->setPos(width()/2 - gameText->boundingRect().width()/2, height()/2 - 100);
+    gameText->setPos(width() / 2 - gameText->boundingRect().width() / 2,
+                     height() / 2 - 100);
     gameText->setZValue(201);
     addItem(gameText);
 
-    QPushButton* backButton = new QPushButton("Volver al menú");
-    backButton->setFixedSize(200, 50);
-    backButton->setStyleSheet("font-size: 20px; background-color: #FFA500; color: white;");
-    QGraphicsProxyWidget* proxyButton = addWidget(backButton);
-    proxyButton->setPos(width()/2 - 100, height()/2 + 20);
-    proxyButton->setZValue(202);
-    connect(backButton, &QPushButton::clicked, this, &GameScene::returnToMenuRequested);
+    /* ---------- Botón de volver al menú  ---------- */
+    backButtonItem = new QGraphicsRectItem(0, 0, 200, 50);
+    backButtonItem->setBrush(QBrush(QColor("#FFA500")));
+    backButtonItem->setZValue(202);
+    backButtonItem->setPos(width() / 2 - 100, height() / 2 + 20);
+    addItem(backButtonItem);
+
+    QGraphicsTextItem* buttonText = new QGraphicsTextItem("Volver al menú", backButtonItem);
+    buttonText->setDefaultTextColor(Qt::white);
+    buttonText->setFont(QFont("Arial", 16, QFont::Bold));
+    buttonText->setPos(25, 10);
+    buttonText->setZValue(203);
+
+    // Habilitar detección de clics
+    backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
+    backButtonItem->setAcceptedMouseButtons(Qt::LeftButton);
 }
 
+
+
+
+
+void GameScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (gameState != LEVEL_COMPLETED && gameState != GAME_OVER) return;
+
+    if (backButtonItem && backButtonItem->isUnderMouse()) {
+        emit returnToMenuRequested();
+    }
+
+    QGraphicsScene::mousePressEvent(event);  // Para que no se bloquee el resto de clics
+}

@@ -23,7 +23,7 @@ Enemy2::Enemy2(const QString& spritePath, QGraphicsItem *parent)
 
     specialTimer = new QTimer(this);
     connect(specialTimer, &QTimer::timeout, this, &Enemy2::specialAttack);
-    specialTimer->start(5000); // cada 5 segundos lanza súper ataque
+    specialTimer->start(2000); // cada 5 segundos lanza súper ataque
 }
 
 void Enemy2::decideAction()

@@ -12,7 +12,7 @@ Character::Character(QGraphicsItem *parent)
 void Character::jump()
 {
     if (!isJumping) {
-        velocityY = -14;  // ← Aumenta el impulso del salto
+        velocityY = -14;
         isJumping = true;
     }
 }

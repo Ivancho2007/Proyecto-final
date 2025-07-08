@@ -10,7 +10,7 @@
 StoneAttack::StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *parent)
     : QObject(), QGraphicsPixmapItem(parent), owner(owner), movingRight(movingRight)
 {
-    // Configurar imagen y daño según el dueño
+
     if (owner == GOKU_ATTACK) {
         setPixmap(QPixmap("C:/Users/IVAN/Downloads/power.png").scaled(40, 40));
         damage = 12;
@@ -19,7 +19,7 @@ StoneAttack::StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *par
         damage = 16;
     }
 
-    // Invertir imagen si va hacia la izquierda
+
     if (!movingRight) {
         setTransform(QTransform::fromScale(-1, 1));
     }

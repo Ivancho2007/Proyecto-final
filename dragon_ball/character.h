@@ -52,4 +52,3 @@ signals:
 };
 
 #endif // CHARACTER_H
-

@@ -11,6 +11,9 @@ class GameSceneLevel2 : public QGraphicsScene
 {
     Q_OBJECT
 
+    enum GameState { PLAYING, GAME_OVER, LEVEL_COMPLETED };
+
+
 public:
     explicit GameSceneLevel2(QObject *parent = nullptr);
     void resizeBackground();
@@ -20,13 +23,16 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
 private slots:
     void update();
     void spawnStoneRain();
+    void returnToMenu();
 
 signals:
     void returnToMenuRequested();
+    void goToMainMenu();
 
 private:
     void setupLevel();
@@ -42,7 +48,8 @@ private:
 
     QTimer *gameTimer;
     QTimer *rainTimer;
-    bool gameOver = false;
+    GameState gameState = PLAYING;
+
 
     QGraphicsRectItem *gokuHealthBar;
     QGraphicsRectItem *gokuHealthBackground;
@@ -50,6 +57,9 @@ private:
     QGraphicsRectItem *enemyHealthBackground;
     void setupHealthBars();
     void updateHealthBars();
+    void showVictory();
+    QGraphicsRectItem* backButtonItem = nullptr;
+
 
 
 };

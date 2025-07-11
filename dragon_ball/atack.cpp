@@ -1,16 +1,14 @@
 #include "atack.h"
 #include "enemy.h"
+#include "enemy2.h"
 #include "goku.h"
+#include "goku2.h"
 #include <QGraphicsScene>
 #include <QDebug>
-#include "enemy2.h"
-#include "goku2.h"
-
 
 StoneAttack::StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *parent)
     : QObject(), QGraphicsPixmapItem(parent), owner(owner), movingRight(movingRight)
 {
-
     if (owner == GOKU_ATTACK) {
         setPixmap(QPixmap("C:/Users/IVAN/Downloads/power.png").scaled(40, 40));
         damage = 12;
@@ -19,15 +17,21 @@ StoneAttack::StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *par
         damage = 16;
     }
 
-
     if (!movingRight) {
         setTransform(QTransform::fromScale(-1, 1));
     }
 
-    // Configurar timer de movimiento
     moveTimer = new QTimer(this);
     connect(moveTimer, &QTimer::timeout, this, &StoneAttack::move);
-    moveTimer->start(30); // Mover cada 30ms
+    moveTimer->start(30);
+}
+
+void StoneAttack::setDamage(int value) {
+    damage = value;
+}
+
+int StoneAttack::getDamage() const {
+    return damage;
 }
 
 void StoneAttack::move()
@@ -69,7 +73,6 @@ void StoneAttack::removeAttack()
 
 StoneAttack::~StoneAttack()
 {
-    // Limpiar el timer si aún existe
     if (moveTimer) {
         moveTimer->stop();
         delete moveTimer;

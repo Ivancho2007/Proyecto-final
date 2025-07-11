@@ -115,3 +115,4 @@ void Character::decreaseHealth(int amount)
     emit healthChanged(); // Emitir señal cuando la salud cambie
     qDebug() << "Health decreased to:" << currentHealth;
 }
+

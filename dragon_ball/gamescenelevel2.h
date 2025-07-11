@@ -3,6 +3,7 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
+#include <QGraphicsTextItem>
 #include <QTimer>
 #include "goku2.h"
 #include "enemy2.h"
@@ -12,7 +13,6 @@ class GameSceneLevel2 : public QGraphicsScene
     Q_OBJECT
 
     enum GameState { PLAYING, GAME_OVER, LEVEL_COMPLETED };
-
 
 public:
     explicit GameSceneLevel2(QObject *parent = nullptr);
@@ -39,6 +39,9 @@ private:
     void checkPlatformCollisions();
     void spawnPlatforms();
     void showGameOver();
+    void showVictory();
+    void setupHealthBars();
+    void updateHealthBars();
 
     QGraphicsPixmapItem *backgroundItem;
     QList<QGraphicsRectItem*> platforms;
@@ -48,20 +51,18 @@ private:
 
     QTimer *gameTimer;
     QTimer *rainTimer;
-    GameState gameState = PLAYING;
+    QTimer *countdownTimer;
+    int timeLeft = 120;
 
+    GameState gameState = PLAYING;
 
     QGraphicsRectItem *gokuHealthBar;
     QGraphicsRectItem *gokuHealthBackground;
     QGraphicsRectItem *enemyHealthBar;
     QGraphicsRectItem *enemyHealthBackground;
-    void setupHealthBars();
-    void updateHealthBars();
-    void showVictory();
     QGraphicsRectItem* backButtonItem = nullptr;
 
-
-
+    QGraphicsTextItem *timerText = nullptr;
 };
 
 #endif // GAMESCENELEVEL2_H

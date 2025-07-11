@@ -15,12 +15,16 @@ public slots:
     void decideAction();
     void attack();
     void specialAttack();
+    void ultraAttack();
+    void ultimateAttack();
 
 private:
     QGraphicsItem* target = nullptr;
     QTimer *aiTimer;
     QTimer *attackTimer;
     QTimer *specialTimer;
+    QTimer *ultraTimer;
+    QTimer *ultimateTimer;
     int attackCooldown = 1000;
 };
 

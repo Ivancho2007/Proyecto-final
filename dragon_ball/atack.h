@@ -12,7 +12,10 @@ public:
     enum AttackOwner { GOKU_ATTACK, PICCOLO_ATTACK };
 
     StoneAttack(AttackOwner owner, bool movingRight, QGraphicsItem *parent = nullptr);
-    virtual ~StoneAttack() override; // Declaración explícita del destructor
+    virtual ~StoneAttack() override;
+
+    void setDamage(int value);
+    int getDamage() const;
 
 public slots:
     void move();
@@ -27,4 +30,5 @@ private:
 };
 
 #endif // ATACK_H
+
 

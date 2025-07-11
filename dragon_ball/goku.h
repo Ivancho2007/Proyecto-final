@@ -17,3 +17,4 @@ public:
 };
 
 #endif // GOKU_H
+

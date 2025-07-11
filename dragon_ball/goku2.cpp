@@ -5,7 +5,7 @@
 Goku2::Goku2(QGraphicsItem *parent)
     : Character(parent)
 {
-    setPixmap(QPixmap("C:/Users/IVAN/Downloads/goku.png").scaled(120, 120, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    setPixmap(QPixmap("C:/Users/IVAN/Downloads/goku2.png").scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     groundLevel = 480;
 }
 

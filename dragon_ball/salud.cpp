@@ -5,7 +5,7 @@
 DragonBall::DragonBall(BallType type, QGraphicsItem *parent)
     : QObject(), QGraphicsPixmapItem(parent), ballType(type)
 {
-    // Asignar valor de salud según el tipo
+
     switch(ballType) {
     case ONE_STAR: healthValue = 5; break;
     case TWO_STARS: healthValue = 10; break;

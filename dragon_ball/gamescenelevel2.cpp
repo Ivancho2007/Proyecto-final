@@ -25,7 +25,7 @@ GameSceneLevel2::GameSceneLevel2(QObject *parent)
 
 void GameSceneLevel2::setupLevel()
 {
-    QPixmap fondo("C:/Users/IVAN/Downloads/fondo2.png");
+    QPixmap fondo("C:/Users/IVAN/Downloads/fondo3.png");
     if (fondo.isNull()) fondo.fill(Qt::cyan);
     backgroundItem = new QGraphicsPixmapItem(fondo.scaled(800, 600));
     backgroundItem->setZValue(-1);
@@ -38,14 +38,40 @@ void GameSceneLevel2::setupLevel()
     goku->setPos(100, goku->groundLevel - goku->pixmap().height());
     addItem(goku);
 
-    enemy = new Enemy2("C:/Users/IVAN/Downloads/majinbuu.png");
+    enemy = new Enemy2("C:/Users/IVAN/Downloads/piccolo2.png");
     enemy->groundLevel = 560;
-    enemy->setPos(600, enemy->groundLevel - enemy->pixmap().height());
+    enemy->setPos(600, enemy->groundLevel - enemy->pixmap().height() - 20);
     addItem(enemy);
 
     setupHealthBars();
     connect(goku, &Character::healthChanged, this, &GameSceneLevel2::updateHealthBars);
     connect(enemy, &Character::healthChanged, this, &GameSceneLevel2::updateHealthBars);
+
+    // Crear temporizador visible
+    timerText = new QGraphicsTextItem("02:00");
+    timerText->setDefaultTextColor(Qt::white);
+    timerText->setFont(QFont("Consolas", 20, QFont::Bold));
+    timerText->setZValue(105);
+    timerText->setPos((width() - timerText->boundingRect().width()) / 2, 20);
+    addItem(timerText);
+
+    // Iniciar cuenta regresiva
+    countdownTimer = new QTimer(this);
+    connect(countdownTimer, &QTimer::timeout, [=]() {
+        if (--timeLeft <= 0) {
+            countdownTimer->stop();
+            gameState = GAME_OVER;
+            showGameOver();
+            return;
+        }
+
+        int minutes = timeLeft / 60;
+        int seconds = timeLeft % 60;
+        timerText->setPlainText(QString("%1:%2")
+                                    .arg(minutes, 2, 10, QLatin1Char('0'))
+                                    .arg(seconds, 2, 10, QLatin1Char('0')));
+    });
+    countdownTimer->start(1000);
 }
 
 void GameSceneLevel2::spawnPlatforms()
@@ -75,7 +101,7 @@ void GameSceneLevel2::spawnPlatforms()
 void GameSceneLevel2::resizeBackground()
 {
     if (backgroundItem) {
-        QPixmap fondo("C:/Users/IVAN/Downloads/fondo2.png");
+        QPixmap fondo("C:/Users/IVAN/Downloads/fondo3.png");
         if (fondo.isNull()) return;
         fondo = fondo.scaled(sceneRect().size().toSize(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         backgroundItem->setPixmap(fondo);
@@ -91,15 +117,56 @@ void GameSceneLevel2::update()
     checkPlatformCollisions();
 
     if (playerFell()) {
-        gameState = GAME_OVER;  // ¡Agregado!
+        gameState = GAME_OVER;
         showGameOver();
-    } else if (enemy && enemy->getHealth() <= 0) {
-        gameState = GAME_OVER;  // ¡Agregado!
+    }
+    else if (enemy && enemy->getHealth() <= 0) {
+        gameState = LEVEL_COMPLETED;
         showVictory();
     }
+    else if (goku && goku->getHealth() <= 0 && gameState == PLAYING) {
+        gameState = GAME_OVER;
+
+        if (gameTimer) gameTimer->stop();
+        if (rainTimer) rainTimer->stop();
+        if (countdownTimer) countdownTimer->stop();
+        if (enemy) enemy->stopTimers();
+
+        // Fondo semitransparente
+        QGraphicsRectItem* overlay = new QGraphicsRectItem(0, 0, width(), height());
+        overlay->setBrush(QColor(0, 0, 0, 150));
+        overlay->setZValue(10);
+        addItem(overlay);
+
+        // Texto de derrota
+        QGraphicsTextItem* lostText = new QGraphicsTextItem("¡PERDISTE!");
+        lostText->setDefaultTextColor(Qt::red);
+        lostText->setFont(QFont("Arial", 36, QFont::Bold));
+        lostText->setZValue(11);
+        lostText->setPos(width()/2 - lostText->boundingRect().width()/2, height()/2 - 80);
+        addItem(lostText);
+
+        // Botón de volver al menú
+        backButtonItem = new QGraphicsRectItem(0, 0, 200, 50);
+        backButtonItem->setBrush(QColor("#FF4444"));
+        backButtonItem->setZValue(12);
+        backButtonItem->setPos(width()/2 - 100, height()/2 + 10);
+        addItem(backButtonItem);
+
+        QGraphicsTextItem* buttonText = new QGraphicsTextItem("Volver al menú", backButtonItem);
+        buttonText->setDefaultTextColor(Qt::white);
+        buttonText->setFont(QFont("Arial", 16, QFont::Bold));
+        buttonText->setPos(25, 10);
+        buttonText->setZValue(13);
+
+        backButtonItem->setAcceptedMouseButtons(Qt::LeftButton);
+        backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
+
+        // Bloquear movimiento de los personajes
+        goku->stopMoving();
+        enemy->stopMoving();
+    }
 }
-
-
 bool GameSceneLevel2::playerFell() const
 {
     return goku && goku->y() > height() + 50;
@@ -166,18 +233,18 @@ void GameSceneLevel2::checkPlatformCollisions()
 
 void GameSceneLevel2::showGameOver()
 {
+    if (countdownTimer) countdownTimer->stop();
     gameState = GAME_OVER;
     gameTimer->stop();
     rainTimer->stop();
     if (enemy) enemy->stopTimers();
 
-    // Fondo oscuro
     QGraphicsRectItem* overlay = new QGraphicsRectItem(0, 0, width(), height());
     overlay->setBrush(QColor(0, 0, 0, 150));
     overlay->setZValue(10);
     addItem(overlay);
 
-    QGraphicsTextItem* lostText = new QGraphicsTextItem("¡Caíste!");
+    QGraphicsTextItem* lostText = new QGraphicsTextItem("¡PERDISTES!");
     lostText->setDefaultTextColor(Qt::red);
     lostText->setFont(QFont("Arial", 36, QFont::Bold));
     lostText->setZValue(11);
@@ -200,21 +267,19 @@ void GameSceneLevel2::showGameOver()
     backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
 }
 
-
 void GameSceneLevel2::showVictory()
 {
+    if (countdownTimer) countdownTimer->stop();
     gameState = LEVEL_COMPLETED;
     gameTimer->stop();
     rainTimer->stop();
     if (enemy) enemy->stopTimers();
 
-    // Fondo oscuro
     QGraphicsRectItem* overlay = new QGraphicsRectItem(0, 0, width(), height());
     overlay->setBrush(QColor(0, 0, 0, 150));
     overlay->setZValue(10);
     addItem(overlay);
 
-    // Texto central
     QGraphicsTextItem* victoryText = new QGraphicsTextItem("¡Nivel 2 Completado!");
     victoryText->setDefaultTextColor(Qt::white);
     victoryText->setFont(QFont("Arial", 36, QFont::Bold));
@@ -222,7 +287,6 @@ void GameSceneLevel2::showVictory()
     victoryText->setPos(width()/2 - victoryText->boundingRect().width()/2, height()/2 - 80);
     addItem(victoryText);
 
-    // Botón personalizado
     backButtonItem = new QGraphicsRectItem(0, 0, 200, 50);
     backButtonItem->setBrush(QColor("#FFA500"));
     backButtonItem->setZValue(12);
@@ -238,8 +302,6 @@ void GameSceneLevel2::showVictory()
     backButtonItem->setAcceptedMouseButtons(Qt::LeftButton);
     backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
 }
-
-
 
 void GameSceneLevel2::keyPressEvent(QKeyEvent *event)
 {
@@ -335,8 +397,6 @@ void GameSceneLevel2::returnToMenu()
 {
     emit goToMainMenu();
 }
-
-
 
 void GameSceneLevel2::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {

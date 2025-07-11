@@ -43,7 +43,7 @@ void GameScene::setupLevel()
     goku->setPos(50, 500 - goku->pixmap().height());
     addItem(goku);
 
-    enemy = new Enemy("C:/Users/IVAN/Downloads/piccolo.png");
+    enemy = new Enemy("C:/Users/IVAN/Downloads/majinbuu.png");
     enemy->setPos(650, 500 - enemy->pixmap().height());
     addItem(enemy);
 
@@ -118,13 +118,13 @@ void GameScene::update()
         if (enemy) enemy->stopTimers();
         if (secondEnemy) secondEnemy->stopTimers();
 
-        // Fondo semitransparente
+
         gameOverlay = new QGraphicsRectItem(0, 0, width(), height());
         gameOverlay->setBrush(QColor(0, 0, 0, 150));
         gameOverlay->setZValue(200);
         addItem(gameOverlay);
 
-        // Texto de derrota
+
         gameText = new QGraphicsTextItem("¡Has perdido!");
         gameText->setDefaultTextColor(Qt::white);
         gameText->setFont(QFont("Arial", 36, QFont::Bold));
@@ -133,7 +133,7 @@ void GameScene::update()
         gameText->setZValue(201);
         addItem(gameText);
 
-        // Botón gráfico personalizado
+
         QGraphicsRectItem* buttonRect = new QGraphicsRectItem(0, 0, 200, 50);
         buttonRect->setBrush(QBrush(QColor("#FF4444")));
         buttonRect->setZValue(202);
@@ -149,7 +149,7 @@ void GameScene::update()
         buttonRect->setFlag(QGraphicsItem::ItemIsSelectable, true);
         buttonRect->setAcceptedMouseButtons(Qt::LeftButton);
 
-        // Guardar botón para detección posterior
+
         backButtonItem = buttonRect;
     }
 
@@ -346,7 +346,7 @@ void GameScene::showLevelComplete()
     buttonText->setPos(25, 10);
     buttonText->setZValue(203);
 
-    // Habilitar detección de clics
+
     backButtonItem->setFlag(QGraphicsItem::ItemIsSelectable, true);
     backButtonItem->setAcceptedMouseButtons(Qt::LeftButton);
 }
@@ -363,5 +363,5 @@ void GameScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         emit returnToMenuRequested();
     }
 
-    QGraphicsScene::mousePressEvent(event);  // Para que no se bloquee el resto de clics
+    QGraphicsScene::mousePressEvent(event);
 }

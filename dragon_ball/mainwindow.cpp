@@ -9,6 +9,7 @@
 #include <QGraphicsView>
 #include <QMediaPlayer>
 #include <QAudioOutput>
+#include <QStackedLayout>
 
 
 
@@ -39,28 +40,39 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::setupMenu()
 {
     QWidget *menuWidget = new QWidget();
-    QVBoxLayout *layout = new QVBoxLayout(menuWidget);
+    menuWidget->setFixedSize(800, 600);
 
-    QLabel *title = new QLabel("DragonBall Game");
+
+    QLabel *backgroundLabel = new QLabel(menuWidget);
+    backgroundLabel->setPixmap(QPixmap("C:/Users/IVAN/Downloads/fondoMenu.png").scaled(800, 600, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+    backgroundLabel->setGeometry(0, 0, 800, 600);
+    backgroundLabel->lower();
+
+
+    QLabel *title = new QLabel("DragonBall Game", menuWidget);
     title->setAlignment(Qt::AlignCenter);
-    title->setStyleSheet("font-size: 36px; color: #FFD700;");
+    title->setStyleSheet("font-size: 36px; color: yellow;");
+    title->setGeometry(0, 100, 800, 50);
+    title->raise();  // Asegura que esté encima
 
-    QPushButton *startLevel1 = new QPushButton("Nivel 1");
-    QPushButton *startLevel2 = new QPushButton("Nivel 2");
+    QPushButton *startLevel1 = new QPushButton("BUSQUEDA", menuWidget);
+    QPushButton *startLevel2 = new QPushButton("BATALLA FINAL", menuWidget);
 
     startLevel1->setStyleSheet("font-size: 24px; padding: 10px; background-color: #1E90FF; color: white;");
     startLevel2->setStyleSheet("font-size: 24px; padding: 10px; background-color: #32CD32; color: white;");
 
-    layout->addWidget(title);
-    layout->addWidget(startLevel1);
-    layout->addWidget(startLevel2);
-    layout->setAlignment(Qt::AlignCenter);
+    startLevel1->setGeometry(300, 200, 200, 50);
+    startLevel2->setGeometry(300, 270, 200, 50);
+
+    startLevel1->raise();
+    startLevel2->raise();
 
     stackedWidget->addWidget(menuWidget);
 
     connect(startLevel1, &QPushButton::clicked, this, &MainWindow::startLevel1);
     connect(startLevel2, &QPushButton::clicked, this, &MainWindow::startLevel2);
 }
+
 
 void MainWindow::startLevel1()
 {
@@ -130,5 +142,5 @@ void MainWindow::returnToMenu()
 
 MainWindow::~MainWindow()
 {
-    // Limpieza automática
+
 }
